@@ -1,0 +1,83 @@
+    \begin{table}[t]
+        \centering
+        \caption{Description of the datasets (n: number of examples, d: number of features, c: number of classes) and the class chosen as positive (label), its number ($n^+$) and percentage (\%).}
+        \begin{tabular}{lrrrrrr}
+        \toprule
+        Name         &     n  &  d &  c &   Label   &$n^+$ &    $\%$\\
+		\midrule
+		abalone      &   4177 & 10 & 28 &         8 &  568 & 13.60\%\\
+		australian   &    690 & 14 &  2 &         1 &  307 & 44.49\%\\
+        autompg      &    392 &  7 &  3 &         2 &   68 & 17.35\%\\
+		balance      &    625 &  4 &  3 &         L &  288 & 46.08\%\\
+		breast       &    699 &  9 &  2 &         4 &  241 & 34.48\%\\
+		bupa         &    345 &  6 &  2 &         1 &  145 & 42.03\%\\
+		covtype      & 581012 & 54 &  7 &         4 & 2747 &  0.47\%\\
+		creditcard   & 284807 & 30 &  2 &         1 &  492 &  0.17\%\\
+		ecoli        &    336 &  7 &  8 &        cp &  143 & 42.56\%\\
+		german       &   1000 & 23 &  2 &         2 &  300 & 30.00\%\\
+		glass        &    214 & 11 &  6 &         1 &   70 & 32.71\%\\
+		haberman     &    306 &  3 &  2 &         1 &   81 & 26.47\%\\
+		hayes        &    160 &  4 &  3 &         3 &   31 & 19.38\%\\
+		heart        &    270 & 13 &  2 &         2 &  120 & 44.44\%\\
+		iono         &    351 & 34 &  2 &         b &  126 & 35.90\%\\
+		iris         &    150 &  4 &  3 & virginica &   50 & 33.33\%\\
+		letter       &  20000 & 16 & 26 &         A &  789 &  3.95\%\\
+		libras       &    360 & 90 & 15 &         1 &   24 &  6.66\%\\
+		newthyroid   &    215 &  5 &  3 &      2, 3 &   65 & 30.23\%\\
+		pageblocks   &   5473 & 10 &  5 &   3, 4, 5 &  231 &  4.22\%\\
+		pima         &    768 &  8 &  2 &         1 &  268 & 34.90\%\\
+		satimage     &   6435 & 36 &  6 &         4 &  626 &  9.73\%\\
+		segmentation &   2310 & 19 &  7 &    window &  330 & 14.29\%\\
+		shuttle      &  58000 &  9 &  7 &         3 &  171 &  0.30\%\\
+		sonar        &    208 & 60 &  2 &         R &   97 & 46.64\%\\
+		spambase     &   4597 & 57 &  2 &         1 & 1812 & 39.42\%\\
+		spectfheart  &    267 & 44 &  2 &         0 &   55 & 20.60\%\\
+		splice       &   3175 & 60 &  2 &        -1 & 1527 & 48.10\%\\
+		vehicle      &    846 & 18 &  4 &       van &  199 & 23.52\%\\
+		wdbc         &    569 & 30 &  2 &         M &  212 & 37.26\%\\
+		wine         &    178 & 13 &  3 &         1 &   59 & 33.15\%\\
+		yeast        &   1484 &  8 & 10 &       ME3 &  163 & 10.98\%\\
+        \bottomrule
+        \end{tabular}
+        \label{tab:datasets}
+    \end{table}
+
+
+
+
+
+
+
+
+
+42 Yeast        1484  2.36% (multiclass; minority class used depends on paper;
+                             I take class EXC)
+41 Abalone      4177  1.6% (multiclass; minority class used depends on paper;
+                            I take class 16)
+38 satimage     6435 10% (multiclass; minority: class 4)
+29 segment      2310 14% (7 classes of length 330; minority class used depends
+                           on paper; I take class WINDOW)
+17 letter      20000  4% (multiclass; minority: class A)
+10 Pageblocks   5472  4.22% (multiclass; minority: union of 3 classes:
+                           graphic(3), vert. line (4), picture(5))
+10 Shuttle     58000  0.26% (multiclass; minority Fpv Open(3))
+credit card: 284,807; 0.172% (fraud = positive class)
+https://www.kaggle.com/mlg-ulb/creditcardfraud
+5 covtype     581012  0.472% (multiclass; minority Cottonwood/Willow(4))
+
+
+Imbalanced dataset not used: 
+19 Vowel         990  9% (badly used on papers: nominal attributes used as
+                           integers instead of binarized features on papers;
+                           I dont like this, so I dont use it)
+15 car          1728  4% (multiclass; minority: very good OR good; nominal
+                           features. I dont like this, so I dont use it)
+10 oil           937  4% (not found on internet)
+9 sick          3772  6% (missing values)
+8 Hypothyroid   3675  5% (seems to be same dataset as 'sick')
+5 estate        5322 12% (not found on internet)
+4 ism          11180  2% (not found on internet)
+4 PC1           1109  7% (not found on internet)
+4 PhosS        11411  5% (not found on internet)
+3 compustat    13657  4% (not found on internet)
+2 Statlandsat   4850  9% (seems to be same dataset as 'satimage')
