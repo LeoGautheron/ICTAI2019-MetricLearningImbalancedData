@@ -7,11 +7,10 @@ from scipy import optimize
 
 
 class iml():
-    def __init__(self, pClass, k=1, a=1, b=1, m=1, Lambda=1,
+    def __init__(self, pClass, k=1, a=1, m=1, Lambda=1,
                  randomState=np.random):
         self.pClass = pClass  # minority<=>positive class
         self.a = a
-        self.b = b
         self.k = k
         self.m = m
         self.Lambda = Lambda
@@ -51,37 +50,6 @@ class iml():
         self.SimP_i = np.array(self.SimP_i)
         self.SimP_j = np.array(self.SimP_j)
 
-        D = euclidean_distances(self.X[self.idxP], self.X[self.idxN],
-                                squared=True)
-
-        # Positive Negative Pairs
-        Didx = np.argsort(D)  # indexes for matrix D sorted ascending
-        self.DisP_i = []
-        self.DisP_j = []
-        for idxI in range(len(self.idxP)):  # for each positive example
-            idxIdxJ = 0
-            while idxIdxJ < self.k:
-                idxJ = Didx[idxI][idxIdxJ]
-                self.DisP_i.append(self.idxP[idxI])
-                self.DisP_j.append(self.idxN[idxJ])
-                idxIdxJ += 1
-        self.DisP_i = np.array(self.DisP_i)
-        self.DisP_j = np.array(self.DisP_j)
-
-        # Negative Positive Pairs
-        Didx = np.argsort(D.T)  # indexes for matrix D.T sorted ascending
-        self.DisN_i = []
-        self.DisN_j = []
-        for idxI in range(len(self.idxN)):  # for each negative example
-            idxIdxJ = 0
-            while idxIdxJ < self.k:
-                idxJ = Didx[idxI][idxIdxJ]
-                self.DisN_i.append(self.idxN[idxI])
-                self.DisN_j.append(self.idxP[idxJ])
-                idxIdxJ += 1
-        self.DisN_i = np.array(self.DisN_i)
-        self.DisN_j = np.array(self.DisN_j)
-
         # Negative Negative Pairs
         D = euclidean_distances(self.X[self.idxN], squared=True)
         np.fill_diagonal(D, np.inf)
@@ -113,10 +81,6 @@ class iml():
         # with the current projection matrix L
         Dm_pp = np.sum((self.X[self.SimP_i].dot(L.T) -
                         self.X[self.SimP_j].dot(L.T))**2, axis=1)
-        Dm_pn = np.sum((self.X[self.DisP_i].dot(L.T) -
-                        self.X[self.DisP_j].dot(L.T))**2, axis=1)
-        Dm_np = np.sum((self.X[self.DisN_i].dot(L.T) -
-                        self.X[self.DisN_j].dot(L.T))**2, axis=1)
         Dm_nn = np.sum((self.X[self.SimN_i].dot(L.T) -
                         self.X[self.SimN_j].dot(L.T))**2, axis=1)
 
@@ -126,17 +90,29 @@ class iml():
         SimP_g = 2*L.dot(diff.T.dot(diff))  # gradient (sum of outer products)
         SimP_l = np.sum(Dm_pp[idx]) - len(idx)  # loss
 
-        # Dis+ (Positive, Negative) pairs
-        idx = np.where(Dm_pn < 1 + self.m)[0]
-        diff = self.X[self.DisP_i[idx]] - self.X[self.DisP_j[idx]]
-        DisP_g = -2*L.dot(diff.T.dot(diff))  # gradient (sum of outer products)
-        DisP_l = len(idx)*(1 + self.m) - np.sum(Dm_pn[idx])  # loss
+        # Compute pairwise mahalanobis Dm distance between examples self.X
+        # with the current projection matrix L
+        LXp = self.X[self.idxP].dot(L.T)
+        LXn = self.X[self.idxN].dot(L.T)
+        Dmpn = euclidean_distances(LXp, LXn, squared=True)  # between pos & neg
 
-        # Dis- (Negative, Positive) pairs
-        idx = np.where(Dm_np < 1 + self.m)[0]
-        diff = self.X[self.DisN_i[idx]] - self.X[self.DisN_j[idx]]
+        # D^+ term
+        idxs = np.argpartition(Dmpn, self.k)[:, :self.k]  # each + k smallest
+        rows = np.repeat(np.arange(len(idxs)), self.k)
+        cols = idxs.flatten()
+        i1, i2 = np.where(Dmpn[rows, cols].reshape(-1, self.k) < 1 + self.m)
+        diff = self.X[self.idxP[i1]]-self.X[self.idxN[idxs[i1, i2]]]
+        DisP_g = -2*L.dot(diff.T.dot(diff))  # gradient (sum of outer products)
+        DisP_l = len(i1)*(1 + self.m) - np.sum(Dmpn[i1, idxs[i1, i2]])
+
+        # D^- term
+        idxs = np.argpartition(Dmpn.T, self.k)[:, :self.k]  # each - k smallest
+        rows = np.repeat(np.arange(len(idxs)), self.k)
+        cols = idxs.flatten()
+        i1, i2 = np.where(Dmpn.T[rows, cols].reshape(-1, self.k) < 1 + self.m)
+        diff = self.X[self.idxN[i1]]-self.X[self.idxP[idxs[i1, i2]]]
         DisN_g = -2*L.dot(diff.T.dot(diff))  # gradient (sum of outer products)
-        DisN_l = len(idx)*(1 + self.m) - np.sum(Dm_np[idx])  # loss
+        DisN_l = len(i1)*(1 + self.m) - np.sum(Dmpn.T[i1, idxs[i1, i2]])
 
         # Sim- (Negative, Negative) pairs
         idx = np.where(Dm_nn > 1)[0]
@@ -149,17 +125,16 @@ class iml():
         N_g = 4*L.dot(L.T.dot(L) - identity)  # gradient
         N_l = np.sum((M-identity)**2)  # loss
 
-        loss = (self.a*SimP_l +
-                self.b*DisP_l +
-                (1-self.b)*DisN_l +
-                (1-self.a)*SimN_l +
+        loss = ((1/(4*self.k*self.Np))*self.a*SimP_l +
+                (1/(4*self.k*self.Np))*(1-self.a)*DisP_l +
+                (1/(4*self.k*self.Nn))*(1-self.a)*DisN_l +
+                (1/(4*self.k*self.Nn))*self.a*SimN_l +
                 self.Lambda*N_l)
-        gradient = (self.a*SimP_g +
-                    self.b*DisP_g +
-                    (1-self.b)*DisN_g +
-                    (1-self.a)*SimN_g +
+        gradient = ((1/(4*self.k*self.Np))*self.a*SimP_g +
+                    (1/(4*self.k*self.Np))*(1-self.a)*DisP_g +
+                    (1/(4*self.k*self.Nn))*(1-self.a)*DisN_g +
+                    (1/(4*self.k*self.Nn))*self.a*SimN_g +
                     self.Lambda*N_g)
-
         return loss, gradient.flatten()
 
     def transform(self, X):
